@@ -1,9 +1,16 @@
+// Jose Mathew
+// 3/15/2024
+// Lab Assignment 8: Merge Sort
+
+
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
+
 int extraMemoryAllocated;
+
 
 void *Alloc(size_t sz)
 {
@@ -14,6 +21,7 @@ void *Alloc(size_t sz)
 	return &ret[1];
 }
 
+
 void DeAlloc(void* ptr)
 {
 	size_t* pSz = (size_t*)ptr - 1;
@@ -22,47 +30,117 @@ void DeAlloc(void* ptr)
 	free((size_t*)ptr - 1);
 }
 
+
 size_t Size(void* ptr)
 {
 	return ((size_t*)ptr)[-1];
 }
 
-// implement merge sort
-// extraMemoryAllocated counts bytes of extra memory allocated
+
+// Function for Merge Sort:
+void merge(int pData[], int l, int m, int r)
+{
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+
+    // Allocate memory for temp arrays L and R
+    int* L = (int*)Alloc(n1 * sizeof(int));
+    int* R = (int*)Alloc(n2 * sizeof(int));
+
+    // Copy data to temp arrays L and R
+    for (i = 0; i < n1; i++)
+        L[i] = pData[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = pData[m + 1+ j];
+
+    // Merge the temp arrays back into pData
+    i = 0; // Initial index of first subarray
+    j = 0; // Initial index of second subarray
+    k = l; // Initial index of merged subarray
+    while (i < n1 && j < n2)
+    {
+        if (L[i] <= R[j])
+        {
+            pData[k] = L[i];
+            i++;
+        }
+        else
+        {
+            pData[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+
+    // Copy the remaining elements of L array
+    while (i < n1)
+    {
+        pData[k] = L[i];
+        i++;
+        k++;
+    }
+
+    // Copy the remaining elements of R array
+    while (j < n2)
+    {
+        pData[k] = R[j];
+        j++;
+        k++;
+    }
+
+    // Deallocate temporary arrays
+    DeAlloc(L);
+    DeAlloc(R);
+}
+
+
 void mergeSort(int pData[], int l, int r)
 {
+    if (l < r)
+    {
+        int m = l+(r-l)/2;
+
+        // Sort first and second halfs
+        mergeSort(pData, l, m);
+        mergeSort(pData, m+1, r);
+
+        // Merge the sorted halfs
+        merge(pData, l, m, r);
+    }
 }
 
-// parses input file to an integer array
+
+// Function that parses input file to an integer array:
 int parseData(char *inputFileName, int **ppData)
 {
-	FILE* inFile = fopen(inputFileName,"r");
-	int dataSz = 0;
-	int i, n, *data;
-	*ppData = NULL;
-	
-	if (inFile)
-	{
-		fscanf(inFile,"%d\n",&dataSz);
-		*ppData = (int *)malloc(sizeof(int) * dataSz);
-		// Implement parse data block
-		if (*ppData == NULL)
-		{
-			printf("Cannot allocate memory\n");
-			exit(-1);
-		}
-		for (i=0;i<dataSz;++i)
-		{
-			fscanf(inFile, "%d ",&n);
-			data = *ppData + i;
-			*data = n;
-		}
+    FILE* inFile = fopen(inputFileName,"r");
+    int dataSz = 0;
+    int i, n, *data;
+    *ppData = NULL;
+    
+    if (inFile)
+    {
+        fscanf(inFile,"%d\n",&dataSz);
+        *ppData = (int *)Alloc(sizeof(int) * dataSz); // Use Alloc instead of malloc here
+        if (*ppData == NULL)
+        {
+            printf("Cannot allocate memory\n");
+            exit(-1);
+        }
+        for (i=0;i<dataSz;++i)
+        {
+            fscanf(inFile, "%d ",&n);
+            data = *ppData + i;
+            *data = n;
+        }
 
-		fclose(inFile);
-	}
-	
-	return dataSz;
+        fclose(inFile);
+    }
+    
+    return dataSz;
 }
+
 
 // prints first and last 100 items in the data array
 void printArray(int pData[], int dataSz)
@@ -81,6 +159,7 @@ void printArray(int pData[], int dataSz)
 	}
 	printf("\n\n");
 }
+
 
 int main(void)
 {
